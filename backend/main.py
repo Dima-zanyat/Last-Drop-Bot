@@ -1,13 +1,16 @@
 """Точка входа."""
 
+import logging
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from httpx import AsyncClient
 
-
+from api.base_router import main_router
 from config import settings
-from core.logging import get_logger, setup_logging
+from core.logging import setup_logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -16,7 +19,14 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Запуск %s", settings.app_name)
     logger.info("Параметры запуска - ")
-    yield
+    app.state.client = AsyncClient(
+        base_url=settings.gamma_base_url,
+        timeout=settings.gamma_timeout,
+    )
+    try:
+        yield
+    finally:
+        app.state.clietn.aclose()
     logger.info("Приложение остановлено.")
 
 
@@ -25,12 +35,15 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.app_name,
-        version="0.1.0",
         debug=settings.debug,
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
         lifespan=lifespan,
+    )
+
+    app.include_router(
+        main_router,
     )
 
     return app

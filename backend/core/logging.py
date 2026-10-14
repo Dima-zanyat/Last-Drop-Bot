@@ -1,7 +1,6 @@
 """Настройка логирования."""
 
 import sys
-import logging
 from logging.config import dictConfig
 
 from config import settings
@@ -10,7 +9,7 @@ from config import settings
 def setup_logging():
     dictConfig(
         {
-            "version": "0.1.0",
+            "version": 1,
             "disable_existing_loggers": False,
             "formatters": {
                 "default": {
@@ -37,7 +36,3 @@ def setup_logging():
             },
         }
     )
-
-
-def get_logger(name: str) -> logging.Logger:
-    return logging.getLogger(name)

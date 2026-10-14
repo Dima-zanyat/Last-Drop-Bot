@@ -1,7 +1,5 @@
 """Модуль настройки приложения."""
 
-from typing import Literal
-
 
 class Settings:
     """Класс настройки приложения."""
@@ -15,6 +13,11 @@ class Settings:
 
     # db
     db_echo = True
+
+    # Gamma
+    gamma_base_url = "https://gamma-api.polymarket.com"
+    gamma_timeout = 10
+    assert_marker: tuple[str, ...] = ("btc", "eth", "sol", "xrp")
 
 
 settings = Settings()
