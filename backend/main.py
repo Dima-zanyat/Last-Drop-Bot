@@ -19,9 +19,15 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("Запуск %s", settings.app_name)
     logger.info("Параметры запуска - ")
-    app.state.client = AsyncClient(
+    app.state.gamma_client = AsyncClient(
         base_url=settings.gamma_base_url,
         timeout=settings.gamma_timeout,
+        http2=True,
+    )
+    app.state.clob_client = AsyncClient(
+        base_url=settings.clob_base_url,
+        timeout=settings.clob_timeout,
+        http2=True,
     )
     try:
         yield

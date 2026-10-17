@@ -5,6 +5,8 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
+from models.utils.parser import parse_data
+
 
 class GammaDataError(ValueError):
     """Некоректные данные в ответе Gamma."""
@@ -59,10 +61,12 @@ def parse_gamma(market: dict[str, Any]):
         raise GammaDataError(f"question - '{question}' - Описание рынка некоректно.")
     window_start = parse_window_start(slug)
 
-    labels: list[str] = parse_data(market.get("outcomes"), "outcomes", str)
-    ids: list[str] = parse_data(market.get("clobTokenIds"), "clobTokenIds", str)
+    labels: list[str] = parse_data(market.get("outcomes"), "outcomes", GammaDataError)
+    ids: list[str] = parse_data(
+        market.get("clobTokenIds"), "clobTokenIds", GammaDataError
+    )
     prices_string: list[str] = parse_data(
-        market.get("outcomePrices"), "outcomePrices", str
+        market.get("outcomePrices"), "outcomePrices", GammaDataError
     )
 
     decimal_prices: list[float] = []
@@ -98,21 +102,3 @@ def parse_window_start(slug: str) -> int:
         raise GammaDataError(
             f"Неудалось извлечь начало окна из slug -{slug}",
         ) from exc
-
-
-def parse_data(value: Any, field_name: str, item_type: type[str]) -> list[str]:
-
-    if value is None:
-        return []
-    try:
-        loads_value = json.loads(value)
-    except json.JSONDecodeError as exc:
-        raise GammaDataError(f"Неулоадсь распарсить - {field_name}") from exc
-
-    if not isinstance(loads_value, list):
-        raise GammaDataError(f"Поле {field_name} не является списком")
-
-    if not all(isinstance(value, item_type) for value in loads_value):
-        raise GammaDataError(f"Значения полей отличается от заданного {item_type}")
-
-    return loads_value

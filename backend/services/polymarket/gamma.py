@@ -20,8 +20,7 @@ class GammaClient:
     def __init__(self, client: httpx.AsyncClient | None = None) -> None:
 
         self._client: httpx.AsyncClient = client or httpx.AsyncClient(
-            base_url=settings.gamma_base_url,
-            timeout=settings.gamma_timeout,
+            base_url=settings.gamma_base_url, timeout=settings.gamma_timeout, http2=True
         )
 
     async def _get_market_by_slug(self, slug: str) -> dict[str, Any] | None:
