@@ -32,7 +32,8 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
-        app.state.clietn.aclose()
+        await app.state.gamma_client.aclose()
+        await app.state.clob_client.aclose()
     logger.info("Приложение остановлено.")
 
 

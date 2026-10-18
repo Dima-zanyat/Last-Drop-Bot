@@ -22,6 +22,7 @@ class GammaClient:
         self._client: httpx.AsyncClient = client or httpx.AsyncClient(
             base_url=settings.gamma_base_url, timeout=settings.gamma_timeout, http2=True
         )
+        self._owmned_client = client is None
 
     async def _get_market_by_slug(self, slug: str) -> dict[str, Any] | None:
         """Найти рынок по slug."""
@@ -75,3 +76,7 @@ class GammaClient:
             and market.get("enableOrderBook") is True
             and market.get("acceptingOrders") is True
         )
+
+    async def close(self):
+        if self._owmned_client:
+            await self._client.aclose()

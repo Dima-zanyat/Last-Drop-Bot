@@ -6,9 +6,10 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 import httpx
 
-from api.dedendecies.markets import DepGammaApi, DepClobApi
+from api.dedendecies.markets import DepGammaApi, DepClobApi, DepCollect
 from models.gamma import CryptoMarket
 from models.clob import OrderBook
+from models.collect import Collect
 from config import settings
 
 router = APIRouter(tags=["markets"])
@@ -77,6 +78,31 @@ async def get_market_order(
         await client.close()
 
 
-@router.get("best-ask-bid")
-async def best_ask_bid():
-    """"""
+@router.get("/best-ask-bid")
+async def best_ask_bid(client: DepCollect) -> list[Collect]:
+    """Собирает общую информацию на основе Gamma и clob."""
+    try:
+        return await client.get_final_result()
+    except httpx.TimeoutException as exc:
+        logger.exception("Истекло время ожидания.")
+        raise HTTPException(
+            status_code=504, detail="Превышено вреимя ожиания."
+        ) from exc
+    except httpx.HTTPStatusError as exc:
+        logger.exception("API вернул HTTP - %s", exc.response.status_code)
+        raise HTTPException(status_code=502, detail="API вернул ошибку")
+    except httpx.RequestError as exc:
+        logger.exception("Ошибка соединения")
+        raise HTTPException(
+            status_code=502,
+            detail="Не удалось подключиться",
+        ) from exc
+    except ValueError as exc:
+        logger.exception("Некорректный ответ")
+        raise HTTPException(
+            status_code=502,
+            detail="Некоректный овтет.",
+        ) from exc
+    finally:
+        await client._clob_client.close()
+        await client._gamma_client.close()
